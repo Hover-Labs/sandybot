@@ -14,7 +14,7 @@ processing_lock = asyncio.Lock()
 DISCORD_BOT_TOKEN = os.environ['DISCORD_BOT_TOKEN']
 
 async def reset_sandbox(reaction):
-    status_msg = await reaction.message.channel.send("Bringing down the cluster...")
+    status_msg = await reaction.message.channel.send(":clock12: Bringing down the cluster...")
     print("Shutting down the cluster...")
 
     proc = await asyncio.create_subprocess_shell(
@@ -29,7 +29,7 @@ async def reset_sandbox(reaction):
     # await reaction.message.channel.send("Done!")
     # await reaction.message.channel.send("```{}```\n```{}```".format(stdout, stderr))
 
-    await status_msg.edit(content="Removing old snapshot data...")
+    await status_msg.edit(content=":clock3: Removing old snapshot data...")
     print("Removing old snapshot data...")
 
     proc = await asyncio.create_subprocess_shell(
@@ -44,7 +44,7 @@ async def reset_sandbox(reaction):
     # await reaction.message.channel.send("Done!")
     # await reaction.message.channel.send("```{}```\n```{}```".format(stdout, stderr))
 
-    await status_msg.edit(content="Restoring Data...")
+    await status_msg.edit(content=":clock6: Restoring Data...")
     print("Restoring data...")
 
     proc = await asyncio.create_subprocess_shell(
@@ -55,7 +55,7 @@ async def reset_sandbox(reaction):
 
     stdout, stderr = await proc.communicate()
 
-    await status_msg.edit(content="Restarting the cluster...")
+    await status_msg.edit(content=":clock9: Restarting the cluster...")
     print("Restarting things...")
 
     proc = await asyncio.create_subprocess_shell(
@@ -66,21 +66,24 @@ async def reset_sandbox(reaction):
 
     stdout, stderr = await proc.communicate()
 
-    await status_msg.edit(content="Done! 🎉")
+    await status_msg.edit(content=":white_check_mark: Done!")
 
     # print("Done! \n++= STDOUT =+++\n{}\n===============\n\n++= STDERR =+++\n{}\n===============".format(stdout, stderr))
     # await reaction.message.channel.send("Done!")
     # await reaction.message.channel.send("```{}```\n```{}```".format(stdout, stderr))
 
 async def remove_message(id, fulfilled=False):
+    message = discord.utils.get(client.cached_messages, id=id)
     async with messages_lock:
-        message = discord.utils.get(client.cached_messages, id=id)
-        await message.clear_reactions()
-        if fulfilled:
-            await message.edit(content='~~' + message.content + '~~ On it!')
-        else:
-            await message.edit(content='~~' + message.content + '~~ Cancelled!')
         del messages[id]
+
+    await message.reactions[0].remove(client.user)
+    await message.reactions[1].remove(client.user)
+
+    if fulfilled:
+        await message.edit(content='~~' + message.content + '~~ On it!')
+    else:
+        await message.edit(content='~~' + message.content + '~~ Cancelled!')
 
 @client.event
 async def on_ready():
@@ -102,19 +105,27 @@ async def on_reaction_add(reaction, user):
 
     elif reaction.emoji == '✅':
         await remove_message(reaction.message.id, fulfilled=True)
-        await reaction.message.channel.send("Cleaning up the sandbox for {}!".format(user))
+        await reaction.message.channel.send("Cleaning up the sandbox for <@!{}>!".format(user.id))
 
         await reset_sandbox(reaction)
 
         message = '''
-Enjoy your freshly reset sandbox environment :). Things will take a few moments to become usable.
+Enjoy your freshly reset sandbox environment :). Things will take around 15s to become usable.
 
+Kolibri Frontends:
 **Kolibri Sandbox**: <https://sandbox.kolibri.finance/>
 **KolibriDAO Sandbox**: <https://governance-sandbox.kolibri.finance/>
 **Harbinger.live Sandbox**: <https://sandbox.harbinger.live/>
+
+Environment Tools:
+**Better-call.dev**: <https://bcd.hover.engineering>
 **Node URL**: <https://sandbox.hover.engineering>
 
-The sandbox is based on the Flextesa sandbox, and things are configured to work with the `alice` account, so you can use the private key `edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq` to import an account which is well stocked with kDAO and tez for any needs you may have! 💰💸
+The sandbox is based on the Flextesa sandbox, and things are configured to work with the `alice` account which is well stocked with kDAO and tez for any needs you may have! 💰💸
+
+Private key - `edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq`
+
+Enjoy! <3
 '''
 
         await reaction.message.channel.send(message)
@@ -141,7 +152,7 @@ To revert the sandbox to a snapshot, use the `!reset` command!
 
         await processing_lock.acquire()
 
-        message = await message.channel.send('Are you sure?')
+        message = await message.channel.send('<@!{}> Are you sure?'.format(message.author.id))
 
         # Store this message for later
         async with messages_lock:
