@@ -59,7 +59,7 @@ async def reset_sandbox(reaction):
     print("Restarting things...")
 
     proc = await asyncio.create_subprocess_shell(
-        'cd /root/bcdhub/ && timedatectl set-ntp false && timedatectl set-time "2021-09-05 16:00:00 UTC" && make flextesa-sandbox',
+        'cd /root/bcdhub/ && timedatectl set-ntp false && timedatectl set-time "2021-09-05 18:25:00 UTC" && make flextesa-sandbox',
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
