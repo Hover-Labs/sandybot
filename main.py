@@ -1,7 +1,5 @@
 import asyncio
-import functools
 import os
-import subprocess
 
 import discord
 
